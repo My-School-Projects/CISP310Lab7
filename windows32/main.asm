@@ -50,6 +50,11 @@ func1 PROC
 	mov ebp, esp				; establish stack frame
 	push ebx					; save ebx
 
+	; The saved ebp and ebx values lie between the current ebp location and the first parameter
+	; Stack values are stored as DWORDs, so 4 bytes each.
+	; That makes the first parameter (x) [ebp+8]
+	; and the second parameter (y) [ebp+12]
+
 	mov eax, [ebp+8]			; eax := x
 	imul eax, 3					; eax := x * 3
 	mov ebx, [ebp+12]			; ebx := y
