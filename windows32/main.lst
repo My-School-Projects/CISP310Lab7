@@ -1,4 +1,4 @@
-Microsoft (R) Macro Assembler Version 11.00.61030.0	    10/06/16 18:40:47
+Microsoft (R) Macro Assembler Version 11.00.61030.0	    10/13/16 15:23:40
 main.asm						     Page 1 - 1
 
 
@@ -15,94 +15,77 @@ main.asm						     Page 1 - 1
 
  00000000			.DATA
 					
-					; We are using DWORD sizes, because the problem spec says to.
-					; We are using unsing unsigned because the problem says the two numbers are positive
-					
-					; These prompts will be displayed when asking for numbers
-					; They are null terminated because the input macro expects a C-string
- 00000000 50 6C 65 61 73		number1Prompt BYTE "Please input a positive integer", 0
-	   65 20 69 6E 70
-	   75 74 20 61 20
-	   70 6F 73 69 74
-	   69 76 65 20 69
-	   6E 74 65 67 65
-	   72 00
- 00000020 50 6C 65 61 73		number2Prompt BYTE "Please input another positive integer", 0
-	   65 20 69 6E 70
-	   75 74 20 61 6E
-	   6F 74 68 65 72
-	   20 70 6F 73 69
-	   74 69 76 65 20
-	   69 6E 74 65 67
-	   65 72 00
-
-					; inputString will be used to store the user's inputs in ASCII.
-					; It is 11 characters long because the longest input will be "4294967295" (11 characters) and the input
-					; macro appends a trailing null (11)
- 00000046  0000000B [			inputString BYTE 11 DUP ("X")
-	    58
+ 00000000 00000000			number1 DWORD 0
+ 00000004 00000000			number2 DWORD 0
+ 00000008 45 6E 74 65 72		prompt1 BYTE "Enter first number x", 0
+	   20 66 69 72 73
+	   74 20 6E 75 6D
+	   62 65 72 20 78
+	   00
+ 0000001D 45 6E 74 65 72		prompt2 BYTE "Enter second number y", 0
+	   20 73 65 63 6F
+	   6E 64 20 6E 75
+	   6D 62 65 72 20
+	   79 00
+ 00000033  00000014 [			string BYTE 20 DUP (0)
+	    00
 	   ]
-
-					; gcdString will be used with dtoa, which expects 11 characters + Null terminator
- 00000051  0000000B [			gcdString BYTE 11 DUP ("X"), 0	; String to store gcd in decimal for output
-	    58
+ 00000047 33 20 2A 20 78		resultLabel BYTE "3 * x + 7 * y", 0
+	   20 2B 20 37 20
+	   2A 20 79 00
+ 00000055  0000000B [			result BYTE 11 DUP (0), 0
+	    00
 	   ] 00
-					
-					; gcdOutputLabel will be used to label the gcd when it is displayed
- 0000005D 47 72 65 61 74		gcdOutputLabel BYTE "Greatest Common Divisor"
-	   65 73 74 20 43
-	   6F 6D 6D 6F 6E
-	   20 44 69 76 69
-	   73 6F 72
-
 
  00000000			.CODE
  00000000			_MainProc PROC
+
+					; Get number1 from user
+					input prompt1, string, 20
+					atod string
+ 0000002D  A3 00000000 R		mov number1, eax
+
+					; Get number2 from user
+					input prompt2, string, 20
+					atod string
+ 0000005F  A3 00000004 R		mov number2, eax
+
+ 00000064  FF 35 00000004 R		push number2				; 2nd parameter
+ 0000006A  FF 35 00000000 R		push number1				; 1st parameter
+ 00000070  E8 0000003A			call func1					; func1(number1, number2)
+ 00000075  83 C4 08			add esp, 8					; remove parameters from stack
+
+					; Display result
+					dtoa result, eax
+					output resultLabel, result
+
+ 000000A9  B8 00000000			mov eax, 0					; exit with return code 0
 					
-					; gcd := number1
-					; remainder := number2
-					; loopStart
-					;   dividend := gcd
-					;   gcd := remainder
-					;   remainder := dividend mod gcd
-					; until(remainder = 0)
+ 000000AE  C3				ret
+ 000000AF			_MainProc ENDP
 
-					; We are using DWORD sizes, because the problem spec says to.
-					; ebx = gcd
-					; ecx = remainder
-					; eax = dividend
-
-					input number1Prompt, inputString, 11	; get input from user (maximum 11 characters, as explained above at inputString)
-					atod inputString						; convert input from ASCII coded decimal to binary integer (stored in EAX)
- 0000002D  8B D8			mov ebx, eax							; gcd := user input
-
-					input number2Prompt, inputString, 11	; get input from user
-					atod inputString						; convert input from string to binary integer (stored in EAX)
- 0000005C  8B C8			mov ecx, eax							; remainder := user input
-
- 0000005E			loopStart:
- 0000005E  8B C3			mov eax, ebx							; dividend := gcd
- 00000060  8B D9			mov ebx, ecx							; gcd := remainder
+				; int func1 (int, int)
+				; returns 3 * x + 7 * y
+ 000000AF			func1 PROC
 					
- 00000062  BA 00000000			mov edx, 0								; EDX will be used as the higher order bits for the dividend
-															; we must set EDX to 0 before dividing because the higher order bits are not significant
- 00000067  F7 F3			div ebx									; divide dividend by gcd (to get dividend mod gcd)
- 00000069  8B CA			mov ecx, edx							; remainder := dividend mod gcd
- 0000006B  83 F9 00			cmp ecx, 0								; remainder = 0?
- 0000006E  75 EE			jnz loopStart							; if (remainder != 0) goto loopStart
- 00000070			loopEnd:
-					
-					dtoa gcdString, ebx						; convert gcd to string (for output)
-					output gcdOutputLabel, gcdString		; output gcd
+ 000000AF  55				push ebp					; save base pointer
+ 000000B0  8B EC			mov ebp, esp				; establish stack frame
+ 000000B2  53				push ebx					; save ebx
 
+ 000000B3  8B 45 08			mov eax, [ebp+8]			; eax := x
+ 000000B6  6B C0 03			imul eax, 3					; eax := x * 3
+ 000000B9  8B 5D 0C			mov ebx, [ebp+12]			; ebx := y
+ 000000BC  6B DB 07			imul ebx, 7					; ebx := y * 7
+ 000000BF  03 C3			add eax, ebx				; eax := x * 3 + y * 7
 
- 000000A1  B8 00000000			mov eax, 0								; exit with return code 0
-					
- 000000A6  C3				ret
- 000000A7			_MainProc ENDP
+ 000000C1  5B				pop ebx						; restore ebx
+ 000000C2  5D				pop ebp						; restore base pointer
+
+ 000000C3  C3				ret							; return
+ 000000C4			func1 ENDP
 
 				END   ; end of source code
-Microsoft (R) Macro Assembler Version 11.00.61030.0	    10/06/16 18:40:47
+Microsoft (R) Macro Assembler Version 11.00.61030.0	    10/13/16 15:23:40
 main.asm						     Symbols 2 - 1
 
 
@@ -126,17 +109,16 @@ Segments and Groups:
 
 FLAT . . . . . . . . . . . . . .	GROUP
 STACK  . . . . . . . . . . . . .	32 Bit	 00001000 Para	  Stack	  'STACK'	 
-_DATA  . . . . . . . . . . . . .	32 Bit	 00000074 Para	  Public  'DATA'	
-_TEXT  . . . . . . . . . . . . .	32 Bit	 000000A7 Para	  Public  'CODE'	
+_DATA  . . . . . . . . . . . . .	32 Bit	 00000061 Para	  Public  'DATA'	
+_TEXT  . . . . . . . . . . . . .	32 Bit	 000000C4 Para	  Public  'CODE'	
 
 
 Procedures, parameters, and locals:
 
                 N a m e                 Type     Value    Attr
 
-_MainProc  . . . . . . . . . . .	P Near	 00000000 _TEXT	Length= 000000A7 Public
-  loopStart  . . . . . . . . . .	L Near	 0000005E _TEXT	
-  loopEnd  . . . . . . . . . . .	L Near	 00000070 _TEXT	
+_MainProc  . . . . . . . . . . .	P Near	 00000000 _TEXT	Length= 000000AF Public
+func1  . . . . . . . . . . . . .	P Near	 000000AF _TEXT	Length= 00000015 Public
 
 
 Symbols:
@@ -157,11 +139,13 @@ _showOutput  . . . . . . . . . .	L Near	 00000000 FLAT	External
 atodproc . . . . . . . . . . . .	L Near	 00000000 FLAT	External
 atowproc . . . . . . . . . . . .	L Near	 00000000 FLAT	External
 dtoaproc . . . . . . . . . . . .	L Near	 00000000 FLAT	External
-gcdOutputLabel . . . . . . . . .	Byte	 0000005D _DATA	
-gcdString  . . . . . . . . . . .	Byte	 00000051 _DATA	
-inputString  . . . . . . . . . .	Byte	 00000046 _DATA	
-number1Prompt  . . . . . . . . .	Byte	 00000000 _DATA	
-number2Prompt  . . . . . . . . .	Byte	 00000020 _DATA	
+number1  . . . . . . . . . . . .	DWord	 00000000 _DATA	
+number2  . . . . . . . . . . . .	DWord	 00000004 _DATA	
+prompt1  . . . . . . . . . . . .	Byte	 00000008 _DATA	
+prompt2  . . . . . . . . . . . .	Byte	 0000001D _DATA	
+resultLabel  . . . . . . . . . .	Byte	 00000047 _DATA	
+result . . . . . . . . . . . . .	Byte	 00000055 _DATA	
+string . . . . . . . . . . . . .	Byte	 00000033 _DATA	
 wtoaproc . . . . . . . . . . . .	L Near	 00000000 FLAT	External
 
 	   0 Warnings
