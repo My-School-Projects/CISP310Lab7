@@ -1,0 +1,168 @@
+Microsoft (R) Macro Assembler Version 11.00.61030.0	    10/06/16 18:40:47
+main.asm						     Page 1 - 1
+
+
+				.586
+				.MODEL FLAT	; only 32 bit addresses, no segment:offset
+
+				INCLUDE io.h   ; header file for input/output
+			      C ; IO.H -- header file for I/O macros (listing suppressed)
+			      C .NOLIST      ; turn off listing
+			      C .LIST        ; begin listing
+			      C 
+
+				.STACK 4096	   ; allocate 4096 bytes for the stack
+
+ 00000000			.DATA
+					
+					; We are using DWORD sizes, because the problem spec says to.
+					; We are using unsing unsigned because the problem says the two numbers are positive
+					
+					; These prompts will be displayed when asking for numbers
+					; They are null terminated because the input macro expects a C-string
+ 00000000 50 6C 65 61 73		number1Prompt BYTE "Please input a positive integer", 0
+	   65 20 69 6E 70
+	   75 74 20 61 20
+	   70 6F 73 69 74
+	   69 76 65 20 69
+	   6E 74 65 67 65
+	   72 00
+ 00000020 50 6C 65 61 73		number2Prompt BYTE "Please input another positive integer", 0
+	   65 20 69 6E 70
+	   75 74 20 61 6E
+	   6F 74 68 65 72
+	   20 70 6F 73 69
+	   74 69 76 65 20
+	   69 6E 74 65 67
+	   65 72 00
+
+					; inputString will be used to store the user's inputs in ASCII.
+					; It is 11 characters long because the longest input will be "4294967295" (11 characters) and the input
+					; macro appends a trailing null (11)
+ 00000046  0000000B [			inputString BYTE 11 DUP ("X")
+	    58
+	   ]
+
+					; gcdString will be used with dtoa, which expects 11 characters + Null terminator
+ 00000051  0000000B [			gcdString BYTE 11 DUP ("X"), 0	; String to store gcd in decimal for output
+	    58
+	   ] 00
+					
+					; gcdOutputLabel will be used to label the gcd when it is displayed
+ 0000005D 47 72 65 61 74		gcdOutputLabel BYTE "Greatest Common Divisor"
+	   65 73 74 20 43
+	   6F 6D 6D 6F 6E
+	   20 44 69 76 69
+	   73 6F 72
+
+
+ 00000000			.CODE
+ 00000000			_MainProc PROC
+					
+					; gcd := number1
+					; remainder := number2
+					; loopStart
+					;   dividend := gcd
+					;   gcd := remainder
+					;   remainder := dividend mod gcd
+					; until(remainder = 0)
+
+					; We are using DWORD sizes, because the problem spec says to.
+					; ebx = gcd
+					; ecx = remainder
+					; eax = dividend
+
+					input number1Prompt, inputString, 11	; get input from user (maximum 11 characters, as explained above at inputString)
+					atod inputString						; convert input from ASCII coded decimal to binary integer (stored in EAX)
+ 0000002D  8B D8			mov ebx, eax							; gcd := user input
+
+					input number2Prompt, inputString, 11	; get input from user
+					atod inputString						; convert input from string to binary integer (stored in EAX)
+ 0000005C  8B C8			mov ecx, eax							; remainder := user input
+
+ 0000005E			loopStart:
+ 0000005E  8B C3			mov eax, ebx							; dividend := gcd
+ 00000060  8B D9			mov ebx, ecx							; gcd := remainder
+					
+ 00000062  BA 00000000			mov edx, 0								; EDX will be used as the higher order bits for the dividend
+															; we must set EDX to 0 before dividing because the higher order bits are not significant
+ 00000067  F7 F3			div ebx									; divide dividend by gcd (to get dividend mod gcd)
+ 00000069  8B CA			mov ecx, edx							; remainder := dividend mod gcd
+ 0000006B  83 F9 00			cmp ecx, 0								; remainder = 0?
+ 0000006E  75 EE			jnz loopStart							; if (remainder != 0) goto loopStart
+ 00000070			loopEnd:
+					
+					dtoa gcdString, ebx						; convert gcd to string (for output)
+					output gcdOutputLabel, gcdString		; output gcd
+
+
+ 000000A1  B8 00000000			mov eax, 0								; exit with return code 0
+					
+ 000000A6  C3				ret
+ 000000A7			_MainProc ENDP
+
+				END   ; end of source code
+Microsoft (R) Macro Assembler Version 11.00.61030.0	    10/06/16 18:40:47
+main.asm						     Symbols 2 - 1
+
+
+
+
+Macros:
+
+                N a m e                 Type
+
+atod . . . . . . . . . . . . . .	Proc
+atow . . . . . . . . . . . . . .	Proc
+dtoa . . . . . . . . . . . . . .	Proc
+input  . . . . . . . . . . . . .	Proc
+output . . . . . . . . . . . . .	Proc
+wtoa . . . . . . . . . . . . . .	Proc
+
+
+Segments and Groups:
+
+                N a m e                 Size     Length   Align   Combine Class
+
+FLAT . . . . . . . . . . . . . .	GROUP
+STACK  . . . . . . . . . . . . .	32 Bit	 00001000 Para	  Stack	  'STACK'	 
+_DATA  . . . . . . . . . . . . .	32 Bit	 00000074 Para	  Public  'DATA'	
+_TEXT  . . . . . . . . . . . . .	32 Bit	 000000A7 Para	  Public  'CODE'	
+
+
+Procedures, parameters, and locals:
+
+                N a m e                 Type     Value    Attr
+
+_MainProc  . . . . . . . . . . .	P Near	 00000000 _TEXT	Length= 000000A7 Public
+  loopStart  . . . . . . . . . .	L Near	 0000005E _TEXT	
+  loopEnd  . . . . . . . . . . .	L Near	 00000070 _TEXT	
+
+
+Symbols:
+
+                N a m e                 Type     Value    Attr
+
+@CodeSize  . . . . . . . . . . .	Number	 00000000h   
+@DataSize  . . . . . . . . . . .	Number	 00000000h   
+@Interface . . . . . . . . . . .	Number	 00000000h   
+@Model . . . . . . . . . . . . .	Number	 00000007h   
+@code  . . . . . . . . . . . . .	Text   	 _TEXT
+@data  . . . . . . . . . . . . .	Text   	 FLAT
+@fardata?  . . . . . . . . . . .	Text   	 FLAT
+@fardata . . . . . . . . . . . .	Text   	 FLAT
+@stack . . . . . . . . . . . . .	Text   	 FLAT
+_getInput  . . . . . . . . . . .	L Near	 00000000 FLAT	External
+_showOutput  . . . . . . . . . .	L Near	 00000000 FLAT	External
+atodproc . . . . . . . . . . . .	L Near	 00000000 FLAT	External
+atowproc . . . . . . . . . . . .	L Near	 00000000 FLAT	External
+dtoaproc . . . . . . . . . . . .	L Near	 00000000 FLAT	External
+gcdOutputLabel . . . . . . . . .	Byte	 0000005D _DATA	
+gcdString  . . . . . . . . . . .	Byte	 00000051 _DATA	
+inputString  . . . . . . . . . .	Byte	 00000046 _DATA	
+number1Prompt  . . . . . . . . .	Byte	 00000000 _DATA	
+number2Prompt  . . . . . . . . .	Byte	 00000020 _DATA	
+wtoaproc . . . . . . . . . . . .	L Near	 00000000 FLAT	External
+
+	   0 Warnings
+	   0 Errors
