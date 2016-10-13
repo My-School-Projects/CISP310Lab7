@@ -1,4 +1,4 @@
-Microsoft (R) Macro Assembler Version 11.00.61030.0	    10/13/16 16:24:45
+Microsoft (R) Macro Assembler Version 11.00.61030.0	    10/13/16 15:23:40
 main.asm						     Page 1 - 1
 
 
@@ -15,54 +15,77 @@ main.asm						     Page 1 - 1
 
  00000000			.DATA
 					
- 00000000 00000019			numberArray DWORD 25, 47, 15, 50, 32, 95 DUP (0)
-	   0000002F
-	   0000000F
-	   00000032
-	   00000020
-	   0000005F [
-	    00000000
+ 00000000 00000000			number1 DWORD 0
+ 00000004 00000000			number2 DWORD 0
+ 00000008 45 6E 74 65 72		prompt1 BYTE "Enter first number x", 0
+	   20 66 69 72 73
+	   74 20 6E 75 6D
+	   62 65 72 20 78
+	   00
+ 0000001D 45 6E 74 65 72		prompt2 BYTE "Enter second number y", 0
+	   20 73 65 63 6F
+	   6E 64 20 6E 75
+	   6D 62 65 72 20
+	   79 00
+ 00000033  00000014 [			string BYTE 20 DUP (0)
+	    00
 	   ]
- 00000190 00000005			elementCount DWORD 5
+ 00000047 33 20 2A 20 78		resultLabel BYTE "3 * x + 7 * y", 0
+	   20 2B 20 37 20
+	   2A 20 79 00
+ 00000055  0000000B [			result BYTE 11 DUP (0), 0
+	    00
+	   ] 00
 
  00000000			.CODE
  00000000			_MainProc PROC
 
-				; Find sum
- 00000000  B8 00000000			mov eax, 0					; sum = 0
- 00000005  8D 1D 00000000 R		lea ebx, numberArray		; addr = &numberArray
- 0000000B  8B 0D 00000190 R		mov ecx, elementCount		; count = elementCount
- 00000011  E3 26			jecxz quit					; quit if no numbers
+					; Get number1 from user
+					input prompt1, string, 20
+					atod string
+ 0000002D  A3 00000000 R		mov number1, eax
 
- 00000013			forCount1:
- 00000013  03 03			add eax, [ebx]				; sum = sum + *addr
- 00000015  83 C3 04			add ebx, 4					; addr += 4
- 00000018  E2 F9			loop forCount1				; while (count != 0)
+					; Get number2 from user
+					input prompt2, string, 20
+					atod string
+ 0000005F  A3 00000004 R		mov number2, eax
 
-				; Find average
- 0000001A  99				cdq							; extend sum to QWORD
- 0000001B  F7 3D 00000190 R		idiv elementCount			; avg = sum / elementCount
+ 00000064  FF 35 00000004 R		push number2				; 2nd parameter
+ 0000006A  FF 35 00000000 R		push number1				; 1st parameter
+ 00000070  E8 0000003A			call func1					; func1(number1, number2)
+ 00000075  83 C4 08			add esp, 8					; remove parameters from stack
 
-				; Add 10 to each array element below average
- 00000021  8D 1D 00000000 R		lea ebx, numberArray		; addr = &numberArray
- 00000027  8B 0D 00000190 R		mov ecx, elementCount		; count = elementCount
- 0000002D			forCount2:
- 0000002D  39 03			cmp DWORD PTR[ebx], eax		; (*addr > avg) ?
- 0000002F  7D 03			jnl endIfSmall				; continue if not less
- 00000031  83 03 0A			add DWORD PTR [ebx], 10		; *addr += 10
+					; Display result
+					dtoa result, eax
+					output resultLabel, result
 
- 00000034			endIfSmall:
- 00000034  83 C3 04			add ebx, 4					; addr += 4
- 00000037  E2 F4			loop forCount2				; while (count != 0)
-
- 00000039			quit:
- 00000039  B8 00000000			mov eax, 0					; exit with return code 0
+ 000000A9  B8 00000000			mov eax, 0					; exit with return code 0
 					
- 0000003E  C3				ret
- 0000003F			_MainProc ENDP
+ 000000AE  C3				ret
+ 000000AF			_MainProc ENDP
+
+				; int func1 (int, int)
+				; returns 3 * x + 7 * y
+ 000000AF			func1 PROC
+					
+ 000000AF  55				push ebp					; save base pointer
+ 000000B0  8B EC			mov ebp, esp				; establish stack frame
+ 000000B2  53				push ebx					; save ebx
+
+ 000000B3  8B 45 08			mov eax, [ebp+8]			; eax := x
+ 000000B6  6B C0 03			imul eax, 3					; eax := x * 3
+ 000000B9  8B 5D 0C			mov ebx, [ebp+12]			; ebx := y
+ 000000BC  6B DB 07			imul ebx, 7					; ebx := y * 7
+ 000000BF  03 C3			add eax, ebx				; eax := x * 3 + y * 7
+
+ 000000C1  5B				pop ebx						; restore ebx
+ 000000C2  5D				pop ebp						; restore base pointer
+
+ 000000C3  C3				ret							; return
+ 000000C4			func1 ENDP
 
 				END   ; end of source code
-Microsoft (R) Macro Assembler Version 11.00.61030.0	    10/13/16 16:24:45
+Microsoft (R) Macro Assembler Version 11.00.61030.0	    10/13/16 15:23:40
 main.asm						     Symbols 2 - 1
 
 
@@ -86,19 +109,16 @@ Segments and Groups:
 
 FLAT . . . . . . . . . . . . . .	GROUP
 STACK  . . . . . . . . . . . . .	32 Bit	 00001000 Para	  Stack	  'STACK'	 
-_DATA  . . . . . . . . . . . . .	32 Bit	 00000194 Para	  Public  'DATA'	
-_TEXT  . . . . . . . . . . . . .	32 Bit	 0000003F Para	  Public  'CODE'	
+_DATA  . . . . . . . . . . . . .	32 Bit	 00000061 Para	  Public  'DATA'	
+_TEXT  . . . . . . . . . . . . .	32 Bit	 000000C4 Para	  Public  'CODE'	
 
 
 Procedures, parameters, and locals:
 
                 N a m e                 Type     Value    Attr
 
-_MainProc  . . . . . . . . . . .	P Near	 00000000 _TEXT	Length= 0000003F Public
-  forCount1  . . . . . . . . . .	L Near	 00000013 _TEXT	
-  forCount2  . . . . . . . . . .	L Near	 0000002D _TEXT	
-  endIfSmall . . . . . . . . . .	L Near	 00000034 _TEXT	
-  quit . . . . . . . . . . . . .	L Near	 00000039 _TEXT	
+_MainProc  . . . . . . . . . . .	P Near	 00000000 _TEXT	Length= 000000AF Public
+func1  . . . . . . . . . . . . .	P Near	 000000AF _TEXT	Length= 00000015 Public
 
 
 Symbols:
@@ -119,8 +139,13 @@ _showOutput  . . . . . . . . . .	L Near	 00000000 FLAT	External
 atodproc . . . . . . . . . . . .	L Near	 00000000 FLAT	External
 atowproc . . . . . . . . . . . .	L Near	 00000000 FLAT	External
 dtoaproc . . . . . . . . . . . .	L Near	 00000000 FLAT	External
-elementCount . . . . . . . . . .	DWord	 00000190 _DATA	
-numberArray  . . . . . . . . . .	DWord	 00000000 _DATA	
+number1  . . . . . . . . . . . .	DWord	 00000000 _DATA	
+number2  . . . . . . . . . . . .	DWord	 00000004 _DATA	
+prompt1  . . . . . . . . . . . .	Byte	 00000008 _DATA	
+prompt2  . . . . . . . . . . . .	Byte	 0000001D _DATA	
+resultLabel  . . . . . . . . . .	Byte	 00000047 _DATA	
+result . . . . . . . . . . . . .	Byte	 00000055 _DATA	
+string . . . . . . . . . . . . .	Byte	 00000033 _DATA	
 wtoaproc . . . . . . . . . . . .	L Near	 00000000 FLAT	External
 
 	   0 Warnings
