@@ -1,4 +1,4 @@
-Microsoft (R) Macro Assembler Version 11.00.61030.0	    10/13/16 18:58:07
+Microsoft (R) Macro Assembler Version 11.00.61030.0	    10/13/16 19:08:22
 main.asm						     Page 1 - 1
 
 
@@ -17,22 +17,32 @@ main.asm						     Page 1 - 1
 					; This is an unsigned problem. There are no negative numbers in this code.
 					; The array elements will be bytes, because they will be ASCII coded strings.
 
-						; This string is null-terminated because it will be the destination of the input macro.
-						; This is temporary, because it is currently hard-coded.
- 00000000 54 68 69 73 20		string BYTE "This is a hard-coded example.", 0
-	   69 73 20 61 20
-	   68 61 72 64 2D
-	   63 6F 64 65 64
-	   20 65 78 61 6D
-	   70 6C 65 2E 00
+						; This string will be used with the input macro to get a string from the user.
+						; We will make it 40 characters long, because that seems reasonable.
+						; We will actually need it to be 41 characters long, because the input macro will add a null terminator.
+ 00000000  00000029 [			inputStr BYTE 41 DUP ("x")
+	    78
+	   ]
 
-						; These numbers will track the numbers of different types of characters in the string
-						; We're using words because the length of the string will not exceed 65535
- 0000001E 0000				lowerCaseCount WORD 0
- 00000020 0000				upperCaseCount WORD 0
- 00000022 0000				digitCount WORD 0
- 00000024 0000				spaceCount WORD 0
- 00000026 0000				otherCount WORD 0
+						; This string will serve as a prompt for getting input from the user.
+						; It must be null-terminated because that is what the input macro expects.
+ 00000029 50 6C 65 61 73		inputPrompt BYTE "Please enter a string. (Max 40 characters)", 0
+	   65 20 65 6E 74
+	   65 72 20 61 20
+	   73 74 72 69 6E
+	   67 2E 20 28 4D
+	   61 78 20 34 30
+	   20 63 68 61 72
+	   61 63 74 65 72
+	   73 29 00
+
+						; These numbers will track the numbers of different types of characters in inputStr
+						; We're using bytes because the length of inputStr will not exceed 40 characters.
+ 00000054 00				lowerCaseCount BYTE 0
+ 00000055 00				upperCaseCount BYTE 0
+ 00000056 00				digitCount BYTE 0
+ 00000057 00				spaceCount BYTE 0
+ 00000058 00				otherCount BYTE 0
 
  00000000			.CODE
  00000000			_MainProc PROC
@@ -40,8 +50,8 @@ main.asm						     Page 1 - 1
 
 					; look for lowercase letters
 
-					; start at first character in string
-					; while (not past end of string) {
+					; start at first character in inputStr
+					; while (not past end of inputStr) {
 					;     if (current character is between "a" and "z" inclusive) {
 					;	      count it as lowercase
 					;     } else
@@ -59,19 +69,21 @@ main.asm						     Page 1 - 1
 					;     go to next character
 					; }
 
- 00000000  8D 1D 00000000 R		lea ebx, string				; address of first byte of string into ebx.
-												; char := first character of string
+
+
+ 00000000  8D 1D 00000000 R		lea ebx, inputStr				; address of first byte of inputStr into ebx.
+												; char := first character of inputStr
  00000006  BF 00000000			mov edi, 0					; index := 0
  0000000B			countLoop:
  0000000B  80 3C 3B 00			cmp BYTE PTR [ebx + 1*edi], 0		; char == 0?
- 0000000F  74 67			jz exitCountLoop			; quit upon reaching 0
+ 0000000F  74 62			jz exitCountLoop			; quit upon reaching 0
 					
  00000011  80 3C 3B 61			cmp BYTE PTR [ebx + 1*edi], "a"
  00000015  72 08			jb notLowerCase				; when char < "a", not lower case
  00000017  80 3C 3B 7A			cmp BYTE PTR [ebx + 1*edi], "z"
  0000001B  77 02			ja notLowerCase				; when char > "z", not lower case
 
- 0000001D  EB 2E			jmp isLowerCase
+ 0000001D  EB 2D			jmp isLowerCase
  0000001F			notLowerCase:
 					
  0000001F  80 3C 3B 41			cmp BYTE PTR [ebx + 1*edi], "A"
@@ -79,7 +91,7 @@ main.asm						     Page 1 - 1
  00000025  80 3C 3B 5A			cmp BYTE PTR [ebx + 1*edi], "Z"
  00000029  77 02			ja notUpperCase				; when char > "Z", not upper case
 
- 0000002B  EB 2A			jmp isUpperCase
+ 0000002B  EB 28			jmp isUpperCase
  0000002D			notUpperCase:
 
  0000002D  80 3C 3B 30			cmp BYTE PTR [ebx + 1*edi], "0"
@@ -87,51 +99,51 @@ main.asm						     Page 1 - 1
  00000033  80 3C 3B 39			cmp BYTE PTR [ebx + 1*edi], "9"
  00000037  77 02			ja notADigit				; when char > "9", not a digit
 
- 00000039  EB 26			jmp isDigit
+ 00000039  EB 23			jmp isDigit
  0000003B			notADigit:
 					
  0000003B  80 3C 3B 20			cmp BYTE PTR [ebx + 1*edi], " "
  0000003F  75 02			jne notASpace				; when char != " ", not a space
 
- 00000041  EB 28			jmp isSpace
+ 00000041  EB 24			jmp isSpace
  00000043			notASpace:
 
 					; If we get here, it is because the current character is not in any of the categories so far
 					
- 00000043  66| 83 05			add otherCount, 1
-	   00000026 R 01
- 0000004B  EB 26			jmp continueCountLoop
+ 00000043  80 05 00000058 R		add otherCount, 1
+	   01
+ 0000004A  EB 22			jmp continueCountLoop
 
- 0000004D			isLowerCase:
- 0000004D  66| 83 05			add lowerCaseCount, 1
-	   0000001E R 01
- 00000055  EB 1C			jmp continueCountLoop
- 00000057			isUpperCase:
- 00000057  66| 83 05			add upperCaseCount, 1
-	   00000020 R 01
- 0000005F  EB 12			jmp continueCountLoop
- 00000061			isDigit:
- 00000061  66| 83 05			add digitCount, 1
-	   00000022 R 01
- 00000069  EB 08			jmp continueCountLoop
- 0000006B			isSpace:
- 0000006B  66| 83 05			add spaceCount, 1
-	   00000024 R 01
+ 0000004C			isLowerCase:
+ 0000004C  80 05 00000054 R		add lowerCaseCount, 1
+	   01
+ 00000053  EB 19			jmp continueCountLoop
+ 00000055			isUpperCase:
+ 00000055  80 05 00000055 R		add upperCaseCount, 1
+	   01
+ 0000005C  EB 10			jmp continueCountLoop
+ 0000005E			isDigit:
+ 0000005E  80 05 00000056 R		add digitCount, 1
+	   01
+ 00000065  EB 07			jmp continueCountLoop
+ 00000067			isSpace:
+ 00000067  80 05 00000057 R		add spaceCount, 1
+	   01
 
- 00000073			continueCountLoop:
- 00000073  83 C7 01			add edi, 1					; char := next character
- 00000076  EB 93			jmp countLoop
- 00000078			exitCountLoop:
+ 0000006E			continueCountLoop:
+ 0000006E  83 C7 01			add edi, 1					; char := next character
+ 00000071  EB 98			jmp countLoop
+ 00000073			exitCountLoop:
 					
 
- 00000078			quit:
- 00000078  B8 00000000			mov eax, 0					; exit with return code 0
+ 00000073			quit:
+ 00000073  B8 00000000			mov eax, 0					; exit with return code 0
 					
- 0000007D  C3				ret
- 0000007E			_MainProc ENDP
+ 00000078  C3				ret
+ 00000079			_MainProc ENDP
 
 				END   ; end of source code
-Microsoft (R) Macro Assembler Version 11.00.61030.0	    10/13/16 18:58:07
+Microsoft (R) Macro Assembler Version 11.00.61030.0	    10/13/16 19:08:22
 main.asm						     Symbols 2 - 1
 
 
@@ -155,27 +167,27 @@ Segments and Groups:
 
 FLAT . . . . . . . . . . . . . .	GROUP
 STACK  . . . . . . . . . . . . .	32 Bit	 00001000 Para	  Stack	  'STACK'	 
-_DATA  . . . . . . . . . . . . .	32 Bit	 00000028 Para	  Public  'DATA'	
-_TEXT  . . . . . . . . . . . . .	32 Bit	 0000007E Para	  Public  'CODE'	
+_DATA  . . . . . . . . . . . . .	32 Bit	 00000059 Para	  Public  'DATA'	
+_TEXT  . . . . . . . . . . . . .	32 Bit	 00000079 Para	  Public  'CODE'	
 
 
 Procedures, parameters, and locals:
 
                 N a m e                 Type     Value    Attr
 
-_MainProc  . . . . . . . . . . .	P Near	 00000000 _TEXT	Length= 0000007E Public
+_MainProc  . . . . . . . . . . .	P Near	 00000000 _TEXT	Length= 00000079 Public
   countLoop  . . . . . . . . . .	L Near	 0000000B _TEXT	
   notLowerCase . . . . . . . . .	L Near	 0000001F _TEXT	
   notUpperCase . . . . . . . . .	L Near	 0000002D _TEXT	
   notADigit  . . . . . . . . . .	L Near	 0000003B _TEXT	
   notASpace  . . . . . . . . . .	L Near	 00000043 _TEXT	
-  isLowerCase  . . . . . . . . .	L Near	 0000004D _TEXT	
-  isUpperCase  . . . . . . . . .	L Near	 00000057 _TEXT	
-  isDigit  . . . . . . . . . . .	L Near	 00000061 _TEXT	
-  isSpace  . . . . . . . . . . .	L Near	 0000006B _TEXT	
-  continueCountLoop  . . . . . .	L Near	 00000073 _TEXT	
-  exitCountLoop  . . . . . . . .	L Near	 00000078 _TEXT	
-  quit . . . . . . . . . . . . .	L Near	 00000078 _TEXT	
+  isLowerCase  . . . . . . . . .	L Near	 0000004C _TEXT	
+  isUpperCase  . . . . . . . . .	L Near	 00000055 _TEXT	
+  isDigit  . . . . . . . . . . .	L Near	 0000005E _TEXT	
+  isSpace  . . . . . . . . . . .	L Near	 00000067 _TEXT	
+  continueCountLoop  . . . . . .	L Near	 0000006E _TEXT	
+  exitCountLoop  . . . . . . . .	L Near	 00000073 _TEXT	
+  quit . . . . . . . . . . . . .	L Near	 00000073 _TEXT	
 
 
 Symbols:
@@ -195,13 +207,14 @@ _getInput  . . . . . . . . . . .	L Near	 00000000 FLAT	External
 _showOutput  . . . . . . . . . .	L Near	 00000000 FLAT	External
 atodproc . . . . . . . . . . . .	L Near	 00000000 FLAT	External
 atowproc . . . . . . . . . . . .	L Near	 00000000 FLAT	External
-digitCount . . . . . . . . . . .	Word	 00000022 _DATA	
+digitCount . . . . . . . . . . .	Byte	 00000056 _DATA	
 dtoaproc . . . . . . . . . . . .	L Near	 00000000 FLAT	External
-lowerCaseCount . . . . . . . . .	Word	 0000001E _DATA	
-otherCount . . . . . . . . . . .	Word	 00000026 _DATA	
-spaceCount . . . . . . . . . . .	Word	 00000024 _DATA	
-string . . . . . . . . . . . . .	Byte	 00000000 _DATA	
-upperCaseCount . . . . . . . . .	Word	 00000020 _DATA	
+inputPrompt  . . . . . . . . . .	Byte	 00000029 _DATA	
+inputStr . . . . . . . . . . . .	Byte	 00000000 _DATA	
+lowerCaseCount . . . . . . . . .	Byte	 00000054 _DATA	
+otherCount . . . . . . . . . . .	Byte	 00000058 _DATA	
+spaceCount . . . . . . . . . . .	Byte	 00000057 _DATA	
+upperCaseCount . . . . . . . . .	Byte	 00000055 _DATA	
 wtoaproc . . . . . . . . . . . .	L Near	 00000000 FLAT	External
 
 	   0 Warnings
