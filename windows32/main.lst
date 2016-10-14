@@ -1,4 +1,4 @@
-Microsoft (R) Macro Assembler Version 11.00.61030.0	    10/13/16 15:23:40
+Microsoft (R) Macro Assembler Version 11.00.61030.0	    10/13/16 17:48:14
 main.asm						     Page 1 - 1
 
 
@@ -14,78 +14,59 @@ main.asm						     Page 1 - 1
 				.STACK 4096	   ; allocate 4096 bytes for the stack
 
  00000000			.DATA
-					
- 00000000 00000000			number1 DWORD 0
- 00000004 00000000			number2 DWORD 0
- 00000008 45 6E 74 65 72		prompt1 BYTE "Enter first number x", 0
-	   20 66 69 72 73
-	   74 20 6E 75 6D
-	   62 65 72 20 78
-	   00
- 0000001D 45 6E 74 65 72		prompt2 BYTE "Enter second number y", 0
-	   20 73 65 63 6F
-	   6E 64 20 6E 75
-	   6D 62 65 72 20
-	   79 00
- 00000033  00000014 [			string BYTE 20 DUP (0)
-	    00
-	   ]
- 00000047 33 20 2A 20 78		resultLabel BYTE "3 * x + 7 * y", 0
-	   20 2B 20 37 20
-	   2A 20 79 00
- 00000055  0000000B [			result BYTE 11 DUP (0), 0
-	    00
-	   ] 00
+					; This is an unsigned problem. There are no negative numbers in this code.
+					; The array elements will be bytes, because they will be ASCII coded strings.
+
+					; This string is null-terminated because it will be the destination of the input macro.
+					; This is temporary, because it is currently hard-coded.
+
+ 00000000 54 68 69 73 20		string BYTE "This is a hard-coded example.", 0
+	   69 73 20 61 20
+	   68 61 72 64 2D
+	   63 6F 64 65 64
+	   20 65 78 61 6D
+	   70 6C 65 2E 00
+
+					; This number will keep track of the number of lower case letters in the string
+ 0000001E 0000				lowerCaseCount WORD 0
 
  00000000			.CODE
  00000000			_MainProc PROC
-
-					; Get number1 from user
-					input prompt1, string, 20
-					atod string
- 0000002D  A3 00000000 R		mov number1, eax
-
-					; Get number2 from user
-					input prompt2, string, 20
-					atod string
- 0000005F  A3 00000004 R		mov number2, eax
-
- 00000064  FF 35 00000004 R		push number2				; 2nd parameter
- 0000006A  FF 35 00000000 R		push number1				; 1st parameter
- 00000070  E8 0000003A			call func1					; func1(number1, number2)
- 00000075  83 C4 08			add esp, 8					; remove parameters from stack
-
-					; Display result
-					dtoa result, eax
-					output resultLabel, result
-
- 000000A9  B8 00000000			mov eax, 0					; exit with return code 0
 					
- 000000AE  C3				ret
- 000000AF			_MainProc ENDP
+					; char = string[0]
+					; while (char != 0) {
+					;	if (char >= 97d && char <= 122d) {
+					;		lowerCaseCount += 1
+					;	}
+					;}
 
-				; int func1 (int, int)
-				; returns 3 * x + 7 * y
- 000000AF			func1 PROC
+ 00000000  8D 2D 00000000 R		lea ebp, string				; address of first byte of string into EBP.
+												; i = 0
+ 00000006			countLoop:
+ 00000006  80 7D 00 00			cmp BYTE PTR [ebp], 0		; string[i] == 0?
+ 0000000A  74 19			jz countLoopEnd				; quit upon reaching null
+						
+ 0000000C  80 7D 00 61			cmp BYTE PTR [ebp], "a"
+ 00000010  72 0E			jb notLowerCase				; jump if (string[i] < "a")
+ 00000012  80 7D 00 7A			cmp BYTE PTR [ebp], "z"
+ 00000016  77 08			ja notLowerCase				; jump if (string[i] > "z")
+
+ 00000018  66| 83 05			add lowerCaseCount, 1		; lowerCaseCount += 1
+	   0000001E R 01
+ 00000020			notLowerCase:
+ 00000020  83 C5 01			add ebp, 1					; i++
+ 00000023  EB E1			jmp countLoop
+ 00000025			countLoopEnd:
 					
- 000000AF  55				push ebp					; save base pointer
- 000000B0  8B EC			mov ebp, esp				; establish stack frame
- 000000B2  53				push ebx					; save ebx
 
- 000000B3  8B 45 08			mov eax, [ebp+8]			; eax := x
- 000000B6  6B C0 03			imul eax, 3					; eax := x * 3
- 000000B9  8B 5D 0C			mov ebx, [ebp+12]			; ebx := y
- 000000BC  6B DB 07			imul ebx, 7					; ebx := y * 7
- 000000BF  03 C3			add eax, ebx				; eax := x * 3 + y * 7
-
- 000000C1  5B				pop ebx						; restore ebx
- 000000C2  5D				pop ebp						; restore base pointer
-
- 000000C3  C3				ret							; return
- 000000C4			func1 ENDP
+ 00000025			quit:
+ 00000025  B8 00000000			mov eax, 0					; exit with return code 0
+					
+ 0000002A  C3				ret
+ 0000002B			_MainProc ENDP
 
 				END   ; end of source code
-Microsoft (R) Macro Assembler Version 11.00.61030.0	    10/13/16 15:23:40
+Microsoft (R) Macro Assembler Version 11.00.61030.0	    10/13/16 17:48:14
 main.asm						     Symbols 2 - 1
 
 
@@ -109,16 +90,19 @@ Segments and Groups:
 
 FLAT . . . . . . . . . . . . . .	GROUP
 STACK  . . . . . . . . . . . . .	32 Bit	 00001000 Para	  Stack	  'STACK'	 
-_DATA  . . . . . . . . . . . . .	32 Bit	 00000061 Para	  Public  'DATA'	
-_TEXT  . . . . . . . . . . . . .	32 Bit	 000000C4 Para	  Public  'CODE'	
+_DATA  . . . . . . . . . . . . .	32 Bit	 00000020 Para	  Public  'DATA'	
+_TEXT  . . . . . . . . . . . . .	32 Bit	 0000002B Para	  Public  'CODE'	
 
 
 Procedures, parameters, and locals:
 
                 N a m e                 Type     Value    Attr
 
-_MainProc  . . . . . . . . . . .	P Near	 00000000 _TEXT	Length= 000000AF Public
-func1  . . . . . . . . . . . . .	P Near	 000000AF _TEXT	Length= 00000015 Public
+_MainProc  . . . . . . . . . . .	P Near	 00000000 _TEXT	Length= 0000002B Public
+  countLoop  . . . . . . . . . .	L Near	 00000006 _TEXT	
+  notLowerCase . . . . . . . . .	L Near	 00000020 _TEXT	
+  countLoopEnd . . . . . . . . .	L Near	 00000025 _TEXT	
+  quit . . . . . . . . . . . . .	L Near	 00000025 _TEXT	
 
 
 Symbols:
@@ -139,13 +123,8 @@ _showOutput  . . . . . . . . . .	L Near	 00000000 FLAT	External
 atodproc . . . . . . . . . . . .	L Near	 00000000 FLAT	External
 atowproc . . . . . . . . . . . .	L Near	 00000000 FLAT	External
 dtoaproc . . . . . . . . . . . .	L Near	 00000000 FLAT	External
-number1  . . . . . . . . . . . .	DWord	 00000000 _DATA	
-number2  . . . . . . . . . . . .	DWord	 00000004 _DATA	
-prompt1  . . . . . . . . . . . .	Byte	 00000008 _DATA	
-prompt2  . . . . . . . . . . . .	Byte	 0000001D _DATA	
-resultLabel  . . . . . . . . . .	Byte	 00000047 _DATA	
-result . . . . . . . . . . . . .	Byte	 00000055 _DATA	
-string . . . . . . . . . . . . .	Byte	 00000033 _DATA	
+lowerCaseCount . . . . . . . . .	Word	 0000001E _DATA	
+string . . . . . . . . . . . . .	Byte	 00000000 _DATA	
 wtoaproc . . . . . . . . . . . .	L Near	 00000000 FLAT	External
 
 	   0 Warnings
