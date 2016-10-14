@@ -31,6 +31,17 @@ _MainProc PROC
 	; while (not past end of string) {
 	;     if (current character is between "a" and "z" inclusive) {
 	;	      count it as lowercase
+	;     } else
+	;     if (current character is between "A" and "Z" inclusive) {
+	;	      count it as uppercase
+	;     } else
+	;     if (current character is between "0" and "9" inclusive) {
+	;	      count it as a digit
+	;     } else
+	;     if (current character is a space) {
+	;         count it as a space
+	;     } else {
+	;         count it as other
 	;     }
 	;     go to next character
 	; }
