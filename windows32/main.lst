@@ -1,4 +1,4 @@
-Microsoft (R) Macro Assembler Version 11.00.61030.0	    10/13/16 19:33:01
+Microsoft (R) Macro Assembler Version 11.00.50727.1	    10/13/16 20:24:30
 main.asm						     Page 1 - 1
 
 
@@ -51,7 +51,7 @@ main.asm						     Page 1 - 1
 	   65 73 65 6E 74
  00000086  0D 0A							BYTE 13, 10 ; CRLF
  00000088  0D 0A							BYTE 13, 10 ; CRLF
- 0000008A  0000000B [			uppperCountText	BYTE 11 DUP ("X")
+ 0000008A  0000000B [			upperCountText	BYTE 11 DUP ("X")
 	    58
 	   ]
  00000095  20 75 70 70 65						BYTE " uppercase letters"
@@ -73,7 +73,7 @@ main.asm						     Page 1 - 1
  000000D3  20 64 69 67 69						BYTE " digits"
 	   74 73
  000000DA  0D 0A							BYTE 13, 10 ; CRLF
- 000000DC  0000000B [			spacesCountText	BYTE 11 DUP ("X")
+ 000000DC  0000000B [			spaceCountText	BYTE 11 DUP ("X")
 	    58
 	   ]
  000000E7  20 73 70 61 63						BYTE " spaces"
@@ -183,56 +183,35 @@ main.asm						     Page 1 - 1
  0000008C  83 C7 01			add edi, 1						; char := next character
  0000008F  EB 98			jmp countLoop
  00000091			exitCountLoop:
-					
- 00000091  A0 00000102 R		mov al, lowerCaseCount
-					dtoa lowerCountText, al
-			     1	            mov    ebx, al         ; source value
-main.asm(138) : error A2070:invalid instruction operands
- dtoa(5): Macro Called From
-  main.asm(138): Main Line Code
- 000000AC  A0 00000103 R		mov al, upperCaseCount
-	dtoa upperCountText, al
-			     1	            lea    ebx, upperCountText           ; destination address
-main.asm(140) : error A2006:undefined symbol : upperCountText
- dtoa(2): Macro Called From
-  main.asm(140): Main Line Code
-			     1	            mov    ebx, al         ; source value
-main.asm(140) : error A2070:invalid instruction operands
- dtoa(5): Macro Called From
-  main.asm(140): Main Line Code
- 000000C1  A0 00000104 R		mov al, digitCount
-					dtoa digitCountText, al
-			     1	            mov    ebx, al         ; source value
-main.asm(142) : error A2070:invalid instruction operands
- dtoa(5): Macro Called From
-  main.asm(142): Main Line Code
- 000000DC  A0 00000105 R		mov al, spaceCount
-					dtoa spaceCountText, al
-			     1	            lea    ebx, spaceCountText           ; destination address
-main.asm(144) : error A2006:undefined symbol : spaceCountText
- dtoa(2): Macro Called From
-  main.asm(144): Main Line Code
-			     1	            mov    ebx, al         ; source value
-main.asm(144) : error A2070:invalid instruction operands
- dtoa(5): Macro Called From
-  main.asm(144): Main Line Code
- 000000F1  A0 00000106 R		mov al, otherCount
-					dtoa otherCountText, al
-			     1	            mov    ebx, al         ; source value
-main.asm(146) : error A2070:invalid instruction operands
- dtoa(5): Macro Called From
-  main.asm(146): Main Line Code
 
+					; Convert values to text for output
+					
+					; edi started at 0 and incremented for each character.
+					; It now holds the number of characters in the string.
+					dtoa charCountText, edi
+ 000000A9  B8 00000000			mov eax, 0						; blank out eax
+ 000000AE  A0 00000102 R		mov al, lowerCaseCount
+					dtoa lowerCountText, eax
+ 000000CB  A0 00000103 R		mov al, upperCaseCount
+					dtoa upperCountText, eax
+ 000000E8  A0 00000104 R		mov al, digitCount
+					dtoa digitCountText, eax
+ 00000105  A0 00000105 R		mov al, spaceCount
+					dtoa spaceCountText, eax
+ 00000122  A0 00000106 R		mov al, otherCount
+					dtoa otherCountText, eax
+
+					; Display results, using inputStr as the window title
 					output inputStr, outputStr
 
- 00000139			quit:
- 00000139  B8 00000000			mov eax, 0						; exit with return code 0
+ 00000158			quit:
+ 00000158  B8 00000000			mov eax, 0						; exit with return code 0
 					
- 0000013E  C3				ret
- 0000013F			_MainProc ENDP
+ 0000015D  C3				ret
+ 0000015E			_MainProc ENDP
 
 				END   ; end of source code
-Microsoft (R) Macro Assembler Version 11.00.61030.0	    10/13/16 19:33:01
+Microsoft (R) Macro Assembler Version 11.00.50727.1	    10/13/16 20:24:30
 main.asm						     Symbols 2 - 1
 
 
@@ -257,14 +236,14 @@ Segments and Groups:
 FLAT . . . . . . . . . . . . . .	GROUP
 STACK  . . . . . . . . . . . . .	32 Bit	 00001000 Para	  Stack	  'STACK'	 
 _DATA  . . . . . . . . . . . . .	32 Bit	 00000107 Para	  Public  'DATA'	
-_TEXT  . . . . . . . . . . . . .	32 Bit	 0000013F Para	  Public  'CODE'	
+_TEXT  . . . . . . . . . . . . .	32 Bit	 0000015E Para	  Public  'CODE'	
 
 
 Procedures, parameters, and locals:
 
                 N a m e                 Type     Value    Attr
 
-_MainProc  . . . . . . . . . . .	P Near	 00000000 _TEXT	Length= 0000013F Public
+_MainProc  . . . . . . . . . . .	P Near	 00000000 _TEXT	Length= 0000015E Public
   countLoop  . . . . . . . . . .	L Near	 00000029 _TEXT	
   notLowerCase . . . . . . . . .	L Near	 0000003D _TEXT	
   notUpperCase . . . . . . . . .	L Near	 0000004B _TEXT	
@@ -276,7 +255,7 @@ _MainProc  . . . . . . . . . . .	P Near	 00000000 _TEXT	Length= 0000013F Public
   isSpace  . . . . . . . . . . .	L Near	 00000085 _TEXT	
   continueCountLoop  . . . . . .	L Near	 0000008C _TEXT	
   exitCountLoop  . . . . . . . .	L Near	 00000091 _TEXT	
-  quit . . . . . . . . . . . . .	L Near	 00000139 _TEXT	
+  quit . . . . . . . . . . . . .	L Near	 00000158 _TEXT	
 
 
 Symbols:
@@ -307,11 +286,11 @@ lowerCountText . . . . . . . . .	Byte	 000000A9 _DATA
 otherCountText . . . . . . . . .	Byte	 000000F0 _DATA	
 otherCount . . . . . . . . . . .	Byte	 00000106 _DATA	
 outputStr  . . . . . . . . . . .	Byte	 00000054 _DATA	
+spaceCountText . . . . . . . . .	Byte	 000000DC _DATA	
 spaceCount . . . . . . . . . . .	Byte	 00000105 _DATA	
-spacesCountText  . . . . . . . .	Byte	 000000DC _DATA	
 upperCaseCount . . . . . . . . .	Byte	 00000103 _DATA	
-uppperCountText  . . . . . . . .	Byte	 0000008A _DATA	
+upperCountText . . . . . . . . .	Byte	 0000008A _DATA	
 wtoaproc . . . . . . . . . . . .	L Near	 00000000 FLAT	External
 
 	   0 Warnings
-	   7 Errors
+	   0 Errors

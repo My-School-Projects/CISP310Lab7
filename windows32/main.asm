@@ -25,7 +25,7 @@ INCLUDE io.h   ; header file for input/output
 					BYTE " characters in the string represent"
 					BYTE 13, 10 ; CRLF
 					BYTE 13, 10 ; CRLF
-	uppperCountText	BYTE 11 DUP ("X")
+	upperCountText	BYTE 11 DUP ("X")
 					BYTE " uppercase letters"
 					BYTE 13, 10 ; CRLF
 	lowerCountText	BYTE 11 DUP ("X")
@@ -34,7 +34,7 @@ INCLUDE io.h   ; header file for input/output
 	digitCountText	BYTE 11 DUP ("X")
 					BYTE " digits"
 					BYTE 13, 10 ; CRLF
-	spacesCountText	BYTE 11 DUP ("X")
+	spaceCountText	BYTE 11 DUP ("X")
 					BYTE " spaces"
 					BYTE 13, 10 ; CRLF
 	otherCountText	BYTE 11 DUP ("X")
@@ -133,18 +133,25 @@ continueCountLoop:
 	add edi, 1						; char := next character
 	jmp countLoop
 exitCountLoop:
-	
-	mov al, lowerCaseCount
-	dtoa lowerCountText, al
-	mov al, upperCaseCount
-	dtoa upperCountText, al
-	mov al, digitCount
-	dtoa digitCountText, al
-	mov al, spaceCount
-	dtoa spaceCountText, al
-	mov al, otherCount
-	dtoa otherCountText, al
 
+	; Convert values to text for output
+	
+	; edi started at 0 and incremented for each character.
+	; It now holds the number of characters in the string.
+	dtoa charCountText, edi
+	mov eax, 0						; blank out eax
+	mov al, lowerCaseCount
+	dtoa lowerCountText, eax
+	mov al, upperCaseCount
+	dtoa upperCountText, eax
+	mov al, digitCount
+	dtoa digitCountText, eax
+	mov al, spaceCount
+	dtoa spaceCountText, eax
+	mov al, otherCount
+	dtoa otherCountText, eax
+
+	; Display results, using inputStr as the window title
 	output inputStr, outputStr
 
 quit:
