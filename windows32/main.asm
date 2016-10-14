@@ -18,6 +18,30 @@ INCLUDE io.h   ; header file for input/output
 		; It must be null-terminated because that is what the input macro expects.
 	inputPrompt BYTE "Please enter a string. (Max 40 characters)", 0
 
+		; This string will be used to output the count values
+		; Each variable needs 11 characters because that's what dtoa gives
+	outputStr		BYTE "The "
+	charCountText	BYTE 11 DUP ("X")
+					BYTE " characters in the string represent"
+					BYTE 13, 10 ; CRLF
+					BYTE 13, 10 ; CRLF
+	uppperCountText	BYTE 11 DUP ("X")
+					BYTE " uppercase letters"
+					BYTE 13, 10 ; CRLF
+	lowerCountText	BYTE 11 DUP ("X")
+					BYTE " lowercase letters"
+					BYTE 13, 10 ; CRLF
+	digitCountText	BYTE 11 DUP ("X")
+					BYTE " digits"
+					BYTE 13, 10 ; CRLF
+	spacesCountText	BYTE 11 DUP ("X")
+					BYTE " spaces"
+					BYTE 13, 10 ; CRLF
+	otherCountText	BYTE 11 DUP ("X")
+					BYTE " other"
+					BYTE 0						; null terminator
+
+
 		; These numbers will track the numbers of different types of characters in inputStr
 		; We're using bytes because the length of inputStr will not exceed 40 characters.
 	lowerCaseCount BYTE 0
@@ -49,7 +73,7 @@ _MainProc PROC
 	;     go to next character
 	; }
 
-
+	input inputPrompt, inputStr, 40	; read input from user into inputStr (max 40 characters)
 
 	lea ebx, inputStr				; address of first byte of inputStr into ebx.
 									; char := first character of inputStr
@@ -110,6 +134,18 @@ continueCountLoop:
 	jmp countLoop
 exitCountLoop:
 	
+	mov al, lowerCaseCount
+	dtoa lowerCountText, al
+	mov al, upperCaseCount
+	dtoa upperCountText, al
+	mov al, digitCount
+	dtoa digitCountText, al
+	mov al, spaceCount
+	dtoa spaceCountText, al
+	mov al, otherCount
+	dtoa otherCountText, al
+
+	output inputStr, outputStr
 
 quit:
 	mov eax, 0						; exit with return code 0
