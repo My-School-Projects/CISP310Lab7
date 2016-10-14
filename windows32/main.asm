@@ -87,7 +87,8 @@ countLoop:
 	cmp BYTE PTR [ebx + 1*edi], "z"
 	ja notLowerCase					; when char > "z", not lower case
 
-	jmp isLowerCase
+	add lowerCaseCount, 1
+	jmp continueCountLoop
 notLowerCase:
 	
 	cmp BYTE PTR [ebx + 1*edi], "A"
@@ -95,7 +96,8 @@ notLowerCase:
 	cmp BYTE PTR [ebx + 1*edi], "Z"
 	ja notUpperCase					; when char > "Z", not upper case
 
-	jmp isUpperCase
+	add upperCaseCount, 1
+	jmp continueCountLoop
 notUpperCase:
 
 	cmp BYTE PTR [ebx + 1*edi], "0"
@@ -103,31 +105,20 @@ notUpperCase:
 	cmp BYTE PTR [ebx + 1*edi], "9"
 	ja notADigit					; when char > "9", not a digit
 
-	jmp isDigit
+	add digitCount, 1
+	jmp continueCountLoop
 notADigit:
 	
 	cmp BYTE PTR [ebx + 1*edi], " "
 	jne notASpace					; when char != " ", not a space
 
-	jmp isSpace
+	add spaceCount, 1
+	jmp continueCountLoop
 notASpace:
 
 	; If we get here, it is because the current character is not in any of the categories so far
 	
 	add otherCount, 1
-	jmp continueCountLoop
-
-isLowerCase:
-	add lowerCaseCount, 1
-	jmp continueCountLoop
-isUpperCase:
-	add upperCaseCount, 1
-	jmp continueCountLoop
-isDigit:
-	add digitCount, 1
-	jmp continueCountLoop
-isSpace:
-	add spaceCount, 1
 
 continueCountLoop:
 	add edi, 1						; char := next character

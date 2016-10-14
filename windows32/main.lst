@@ -1,4 +1,4 @@
-Microsoft (R) Macro Assembler Version 11.00.50727.1	    10/13/16 20:24:30
+Microsoft (R) Macro Assembler Version 11.00.50727.1	    10/13/16 20:31:14
 main.asm						     Page 1 - 1
 
 
@@ -125,93 +125,84 @@ main.asm						     Page 1 - 1
  00000024  BF 00000000			mov edi, 0						; index := 0
  00000029			countLoop:
  00000029  80 3C 3B 00			cmp BYTE PTR [ebx + 1*edi], 0	; char == 0?
- 0000002D  74 62			jz exitCountLoop				; quit upon reaching 0
+ 0000002D  74 5A			jz exitCountLoop				; quit upon reaching 0
 					
  0000002F  80 3C 3B 61			cmp BYTE PTR [ebx + 1*edi], "a"
- 00000033  72 08			jb notLowerCase					; when char < "a", not lower case
+ 00000033  72 0F			jb notLowerCase					; when char < "a", not lower case
  00000035  80 3C 3B 7A			cmp BYTE PTR [ebx + 1*edi], "z"
- 00000039  77 02			ja notLowerCase					; when char > "z", not lower case
+ 00000039  77 09			ja notLowerCase					; when char > "z", not lower case
 
- 0000003B  EB 2D			jmp isLowerCase
- 0000003D			notLowerCase:
+ 0000003B  80 05 00000102 R		add lowerCaseCount, 1
+	   01
+ 00000042  EB 40			jmp continueCountLoop
+ 00000044			notLowerCase:
 					
- 0000003D  80 3C 3B 41			cmp BYTE PTR [ebx + 1*edi], "A"
- 00000041  72 08			jb notUpperCase					; when char < "A", not upper case
- 00000043  80 3C 3B 5A			cmp BYTE PTR [ebx + 1*edi], "Z"
- 00000047  77 02			ja notUpperCase					; when char > "Z", not upper case
+ 00000044  80 3C 3B 41			cmp BYTE PTR [ebx + 1*edi], "A"
+ 00000048  72 0F			jb notUpperCase					; when char < "A", not upper case
+ 0000004A  80 3C 3B 5A			cmp BYTE PTR [ebx + 1*edi], "Z"
+ 0000004E  77 09			ja notUpperCase					; when char > "Z", not upper case
 
- 00000049  EB 28			jmp isUpperCase
- 0000004B			notUpperCase:
+ 00000050  80 05 00000103 R		add upperCaseCount, 1
+	   01
+ 00000057  EB 2B			jmp continueCountLoop
+ 00000059			notUpperCase:
 
- 0000004B  80 3C 3B 30			cmp BYTE PTR [ebx + 1*edi], "0"
- 0000004F  72 08			jb notADigit					; when char < "0", not a digit
- 00000051  80 3C 3B 39			cmp BYTE PTR [ebx + 1*edi], "9"
- 00000055  77 02			ja notADigit					; when char > "9", not a digit
+ 00000059  80 3C 3B 30			cmp BYTE PTR [ebx + 1*edi], "0"
+ 0000005D  72 0F			jb notADigit					; when char < "0", not a digit
+ 0000005F  80 3C 3B 39			cmp BYTE PTR [ebx + 1*edi], "9"
+ 00000063  77 09			ja notADigit					; when char > "9", not a digit
 
- 00000057  EB 23			jmp isDigit
- 00000059			notADigit:
+ 00000065  80 05 00000104 R		add digitCount, 1
+	   01
+ 0000006C  EB 16			jmp continueCountLoop
+ 0000006E			notADigit:
 					
- 00000059  80 3C 3B 20			cmp BYTE PTR [ebx + 1*edi], " "
- 0000005D  75 02			jne notASpace					; when char != " ", not a space
+ 0000006E  80 3C 3B 20			cmp BYTE PTR [ebx + 1*edi], " "
+ 00000072  75 09			jne notASpace					; when char != " ", not a space
 
- 0000005F  EB 24			jmp isSpace
- 00000061			notASpace:
+ 00000074  80 05 00000105 R		add spaceCount, 1
+	   01
+ 0000007B  EB 07			jmp continueCountLoop
+ 0000007D			notASpace:
 
 					; If we get here, it is because the current character is not in any of the categories so far
 					
- 00000061  80 05 00000106 R		add otherCount, 1
-	   01
- 00000068  EB 22			jmp continueCountLoop
-
- 0000006A			isLowerCase:
- 0000006A  80 05 00000102 R		add lowerCaseCount, 1
-	   01
- 00000071  EB 19			jmp continueCountLoop
- 00000073			isUpperCase:
- 00000073  80 05 00000103 R		add upperCaseCount, 1
-	   01
- 0000007A  EB 10			jmp continueCountLoop
- 0000007C			isDigit:
- 0000007C  80 05 00000104 R		add digitCount, 1
-	   01
- 00000083  EB 07			jmp continueCountLoop
- 00000085			isSpace:
- 00000085  80 05 00000105 R		add spaceCount, 1
+ 0000007D  80 05 00000106 R		add otherCount, 1
 	   01
 
- 0000008C			continueCountLoop:
- 0000008C  83 C7 01			add edi, 1						; char := next character
- 0000008F  EB 98			jmp countLoop
- 00000091			exitCountLoop:
+ 00000084			continueCountLoop:
+ 00000084  83 C7 01			add edi, 1						; char := next character
+ 00000087  EB A0			jmp countLoop
+ 00000089			exitCountLoop:
 
 					; Convert values to text for output
 					
 					; edi started at 0 and incremented for each character.
 					; It now holds the number of characters in the string.
 					dtoa charCountText, edi
- 000000A9  B8 00000000			mov eax, 0						; blank out eax
- 000000AE  A0 00000102 R		mov al, lowerCaseCount
+ 000000A1  B8 00000000			mov eax, 0						; blank out eax
+ 000000A6  A0 00000102 R		mov al, lowerCaseCount
 					dtoa lowerCountText, eax
- 000000CB  A0 00000103 R		mov al, upperCaseCount
+ 000000C3  A0 00000103 R		mov al, upperCaseCount
 					dtoa upperCountText, eax
- 000000E8  A0 00000104 R		mov al, digitCount
+ 000000E0  A0 00000104 R		mov al, digitCount
 					dtoa digitCountText, eax
- 00000105  A0 00000105 R		mov al, spaceCount
+ 000000FD  A0 00000105 R		mov al, spaceCount
 					dtoa spaceCountText, eax
- 00000122  A0 00000106 R		mov al, otherCount
+ 0000011A  A0 00000106 R		mov al, otherCount
 					dtoa otherCountText, eax
 
 					; Display results, using inputStr as the window title
 					output inputStr, outputStr
 
- 00000158			quit:
- 00000158  B8 00000000			mov eax, 0						; exit with return code 0
+ 00000150			quit:
+ 00000150  B8 00000000			mov eax, 0						; exit with return code 0
 					
- 0000015D  C3				ret
- 0000015E			_MainProc ENDP
+ 00000155  C3				ret
+ 00000156			_MainProc ENDP
 
 				END   ; end of source code
-Microsoft (R) Macro Assembler Version 11.00.50727.1	    10/13/16 20:24:30
+Microsoft (R) Macro Assembler Version 11.00.50727.1	    10/13/16 20:31:14
 main.asm						     Symbols 2 - 1
 
 
@@ -236,26 +227,22 @@ Segments and Groups:
 FLAT . . . . . . . . . . . . . .	GROUP
 STACK  . . . . . . . . . . . . .	32 Bit	 00001000 Para	  Stack	  'STACK'	 
 _DATA  . . . . . . . . . . . . .	32 Bit	 00000107 Para	  Public  'DATA'	
-_TEXT  . . . . . . . . . . . . .	32 Bit	 0000015E Para	  Public  'CODE'	
+_TEXT  . . . . . . . . . . . . .	32 Bit	 00000156 Para	  Public  'CODE'	
 
 
 Procedures, parameters, and locals:
 
                 N a m e                 Type     Value    Attr
 
-_MainProc  . . . . . . . . . . .	P Near	 00000000 _TEXT	Length= 0000015E Public
+_MainProc  . . . . . . . . . . .	P Near	 00000000 _TEXT	Length= 00000156 Public
   countLoop  . . . . . . . . . .	L Near	 00000029 _TEXT	
-  notLowerCase . . . . . . . . .	L Near	 0000003D _TEXT	
-  notUpperCase . . . . . . . . .	L Near	 0000004B _TEXT	
-  notADigit  . . . . . . . . . .	L Near	 00000059 _TEXT	
-  notASpace  . . . . . . . . . .	L Near	 00000061 _TEXT	
-  isLowerCase  . . . . . . . . .	L Near	 0000006A _TEXT	
-  isUpperCase  . . . . . . . . .	L Near	 00000073 _TEXT	
-  isDigit  . . . . . . . . . . .	L Near	 0000007C _TEXT	
-  isSpace  . . . . . . . . . . .	L Near	 00000085 _TEXT	
-  continueCountLoop  . . . . . .	L Near	 0000008C _TEXT	
-  exitCountLoop  . . . . . . . .	L Near	 00000091 _TEXT	
-  quit . . . . . . . . . . . . .	L Near	 00000158 _TEXT	
+  notLowerCase . . . . . . . . .	L Near	 00000044 _TEXT	
+  notUpperCase . . . . . . . . .	L Near	 00000059 _TEXT	
+  notADigit  . . . . . . . . . .	L Near	 0000006E _TEXT	
+  notASpace  . . . . . . . . . .	L Near	 0000007D _TEXT	
+  continueCountLoop  . . . . . .	L Near	 00000084 _TEXT	
+  exitCountLoop  . . . . . . . .	L Near	 00000089 _TEXT	
+  quit . . . . . . . . . . . . .	L Near	 00000150 _TEXT	
 
 
 Symbols:
