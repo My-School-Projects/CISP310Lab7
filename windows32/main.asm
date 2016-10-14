@@ -9,40 +9,89 @@ INCLUDE io.h   ; header file for input/output
 	; This is an unsigned problem. There are no negative numbers in this code.
 	; The array elements will be bytes, because they will be ASCII coded strings.
 
-	; This string is null-terminated because it will be the destination of the input macro.
-	; This is temporary, because it is currently hard-coded.
-
+		; This string is null-terminated because it will be the destination of the input macro.
+		; This is temporary, because it is currently hard-coded.
 	string BYTE "This is a hard-coded example.", 0
 
-	; This number will keep track of the number of lower case letters in the string
+		; These numbers will track the numbers of different types of characters in the string
+		; We're using words because the length of the string will not exceed 65535
 	lowerCaseCount WORD 0
+	upperCaseCount WORD 0
+	digitCount WORD 0
+	spaceCount WORD 0
+	otherCount WORD 0
 
 .CODE
 _MainProc PROC
 	
-	; for (int i = 0; string[i] != 0; i++) {
-	;	if (string[i] >= "a" && string[i] <= "z") {
-	;		lowerCaseCount += 1
-	;	}
-	;}
 
+	; look for lowercase letters
+
+	; start at first character in string
+	; while (not past end of string) {
+	;     if (current character is between "a" and "z" inclusive) {
+	;	      count it as lowercase
+	;     }
+	;     go to next character
+	; }
 
 	lea ebp, string				; address of first byte of string into EBP.
-								; i = 0
+								; char := first character of string
 countLoop:
-	cmp BYTE PTR [ebp], 0		; string[i] == 0?
-	jz countLoopEnd				; quit upon reaching null
+	cmp BYTE PTR [ebp], 0		; char == 0?
+	jz exitCountLoop			; quit upon reaching 0
 		
 	cmp BYTE PTR [ebp], "a"
-	jb notLowerCase				; jump if (string[i] < "a")
+	jb notLowerCase				; when char < "a", not lower case
 	cmp BYTE PTR [ebp], "z"
-	ja notLowerCase				; jump if (string[i] > "z")
+	ja notLowerCase				; when char > "z", not lower case
 
-	add lowerCaseCount, 1		; lowerCaseCount += 1
+	jmp isLowerCase
 notLowerCase:
-	add ebp, 1					; i++
+	
+	cmp BYTE PTR [ebp], "A"
+	jb notUpperCase				; when char < "A", not upper case
+	cmp BYTE PTR [ebp], "Z"
+	ja notUpperCase				; when char > "Z", not upper case
+
+	jmp isUpperCase
+notUpperCase:
+
+	cmp BYTE PTR [ebp], "0"
+	jb notADigit				; when char < "0", not a digit
+	cmp BYTE PTR [ebp], "9"
+	ja notADigit				; when char > "9", not a digit
+
+	jmp isDigit
+notADigit:
+	
+	cmp BYTE PTR [ebp], " "
+	jne notASpace				; when char != " ", not a space
+
+	jmp isSpace
+notASpace:
+
+	; If we get here, it is because the current character is not in any of the categories so far
+	
+	add otherCount, 1
+	jmp continueCountLoop
+
+isLowerCase:
+	add lowerCaseCount, 1
+	jmp continueCountLoop
+isUpperCase:
+	add upperCaseCount, 1
+	jmp continueCountLoop
+isDigit:
+	add digitCount, 1
+	jmp continueCountLoop
+isSpace:
+	add spaceCount, 1
+
+continueCountLoop:
+	add ebp, 1					; char := next character
 	jmp countLoop
-countLoopEnd:
+exitCountLoop:
 	
 
 quit:
