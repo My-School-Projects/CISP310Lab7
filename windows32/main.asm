@@ -46,37 +46,38 @@ _MainProc PROC
 	;     go to next character
 	; }
 
-	lea ebp, string				; address of first byte of string into EBP.
+	lea ebx, string				; address of first byte of string into ebx.
 								; char := first character of string
+	mov edi, 0					; index := 0
 countLoop:
-	cmp BYTE PTR [ebp], 0		; char == 0?
+	cmp BYTE PTR [ebx + 1*edi], 0		; char == 0?
 	jz exitCountLoop			; quit upon reaching 0
-		
-	cmp BYTE PTR [ebp], "a"
+	
+	cmp BYTE PTR [ebx + 1*edi], "a"
 	jb notLowerCase				; when char < "a", not lower case
-	cmp BYTE PTR [ebp], "z"
+	cmp BYTE PTR [ebx + 1*edi], "z"
 	ja notLowerCase				; when char > "z", not lower case
 
 	jmp isLowerCase
 notLowerCase:
 	
-	cmp BYTE PTR [ebp], "A"
+	cmp BYTE PTR [ebx + 1*edi], "A"
 	jb notUpperCase				; when char < "A", not upper case
-	cmp BYTE PTR [ebp], "Z"
+	cmp BYTE PTR [ebx + 1*edi], "Z"
 	ja notUpperCase				; when char > "Z", not upper case
 
 	jmp isUpperCase
 notUpperCase:
 
-	cmp BYTE PTR [ebp], "0"
+	cmp BYTE PTR [ebx + 1*edi], "0"
 	jb notADigit				; when char < "0", not a digit
-	cmp BYTE PTR [ebp], "9"
+	cmp BYTE PTR [ebx + 1*edi], "9"
 	ja notADigit				; when char > "9", not a digit
 
 	jmp isDigit
 notADigit:
 	
-	cmp BYTE PTR [ebp], " "
+	cmp BYTE PTR [ebx + 1*edi], " "
 	jne notASpace				; when char != " ", not a space
 
 	jmp isSpace
@@ -100,7 +101,7 @@ isSpace:
 	add spaceCount, 1
 
 continueCountLoop:
-	add ebp, 1					; char := next character
+	add edi, 1					; char := next character
 	jmp countLoop
 exitCountLoop:
 	
