@@ -73,43 +73,45 @@ _MainProc PROC
 	;     go to next character
 	; }
 
+	push ebp						; save ebp
+
 	input inputPrompt, inputStr, 40	; read input from user into inputStr (max 40 characters)
 
-	lea ebx, inputStr				; address of first byte of inputStr into ebx.
+	lea ebp, inputStr				; address of first byte of inputStr into ebp.
 									; char := first character of inputStr
 	mov edi, 0						; index := 0
 countLoop:
-	cmp BYTE PTR [ebx + 1*edi], 0	; char == 0?
+	cmp BYTE PTR [ebp + 1*edi], 0	; char == 0?
 	jz exitCountLoop				; quit upon reaching 0
 	
-	cmp BYTE PTR [ebx + 1*edi], "a"
+	cmp BYTE PTR [ebp + 1*edi], "a"
 	jb notLowerCase					; when char < "a", not lower case
-	cmp BYTE PTR [ebx + 1*edi], "z"
+	cmp BYTE PTR [ebp + 1*edi], "z"
 	ja notLowerCase					; when char > "z", not lower case
 
 	add lowerCaseCount, 1
 	jmp continueCountLoop
 notLowerCase:
 	
-	cmp BYTE PTR [ebx + 1*edi], "A"
+	cmp BYTE PTR [ebp + 1*edi], "A"
 	jb notUpperCase					; when char < "A", not upper case
-	cmp BYTE PTR [ebx + 1*edi], "Z"
+	cmp BYTE PTR [ebp + 1*edi], "Z"
 	ja notUpperCase					; when char > "Z", not upper case
 
 	add upperCaseCount, 1
 	jmp continueCountLoop
 notUpperCase:
 
-	cmp BYTE PTR [ebx + 1*edi], "0"
+	cmp BYTE PTR [ebp + 1*edi], "0"
 	jb notADigit					; when char < "0", not a digit
-	cmp BYTE PTR [ebx + 1*edi], "9"
+	cmp BYTE PTR [ebp + 1*edi], "9"
 	ja notADigit					; when char > "9", not a digit
 
 	add digitCount, 1
 	jmp continueCountLoop
 notADigit:
 	
-	cmp BYTE PTR [ebx + 1*edi], " "
+	cmp BYTE PTR [ebp + 1*edi], " "
 	jne notASpace					; when char != " ", not a space
 
 	add spaceCount, 1
@@ -146,6 +148,9 @@ exitCountLoop:
 	output inputStr, outputStr
 
 quit:
+	
+	pop ebp							; restore ebp
+	
 	mov eax, 0						; exit with return code 0
 	
 	ret
